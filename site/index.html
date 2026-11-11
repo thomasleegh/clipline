@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0e10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Clipline">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Clipline</title>
+<style>
+  :root { --bg:#0e0e10; --card:#18181c; --line:#2a2a31; --text:#f2f2f5; --dim:#9a9aa6; --accent:#ff5c39; --ok:#3ccf8e; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; background:var(--bg); color:var(--text); font:15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif; }
+  header { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:10px;
+           padding:calc(env(safe-area-inset-top) + 10px) 16px 10px; background:rgba(14,14,16,.92); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); }
+  header h1 { font-size:19px; margin:0; letter-spacing:-.3px; }
+  header h1 b { color:var(--accent); }
+  #count { color:var(--dim); font-size:13px; flex:1; }
+  .icon-btn { background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:10px; padding:7px 11px; font-size:13px; }
+  main { padding:12px 12px calc(env(safe-area-inset-bottom) + 90px); display:flex; flex-direction:column; gap:14px; max-width:520px; margin:0 auto; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden; }
+  .vid { position:relative; background:#000; aspect-ratio:9/16; max-height:64vh; margin:0 auto; display:block; }
+  .vid video { width:100%; height:100%; display:block; object-fit:contain; background:#000; }
+  .meta { padding:12px 14px 4px; display:flex; gap:8px; align-items:center; color:var(--dim); font-size:13px; flex-wrap:wrap; }
+  .meta strong { color:var(--text); font-weight:600; }
+  .score { margin-left:auto; padding:2px 8px; border-radius:20px; font-weight:600; font-size:12px; background:#26262d; color:var(--text); }
+  .score.hi { background:rgba(60,207,142,.15); color:var(--ok); }
+  textarea { width:calc(100% - 28px); margin:6px 14px 0; background:#0f0f12; border:1px solid var(--line); color:var(--text);
+             border-radius:12px; padding:10px 12px; font:inherit; resize:none; min-height:70px; }
+  .row { display:flex; gap:10px; padding:12px 14px 14px; }
+  .row button { flex:1; border:0; border-radius:14px; padding:14px; font:600 16px/1 inherit; }
+  .skip { background:#26262d; color:var(--text); }
+  .post { background:var(--accent); color:#fff; }
+  .post[disabled] { opacity:.6; }
+  .src { display:block; padding:0 14px 12px; color:var(--dim); font-size:12px; text-decoration:none; }
+  .empty, .pin { text-align:center; color:var(--dim); padding:60px 24px; }
+  .empty h2, .pin h2 { color:var(--text); font-size:20px; margin:0 0 8px; }
+  .pin input { margin-top:16px; width:180px; text-align:center; font-size:24px; letter-spacing:6px; padding:12px; border-radius:14px;
+               border:1px solid var(--line); background:var(--card); color:var(--text); }
+  .pin button { display:block; margin:14px auto 0; background:var(--accent); color:#fff; border:0; border-radius:14px; padding:12px 28px; font:600 16px inherit; }
+  #toast { position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom) + 20px); transform:translateX(-50%) translateY(140%);
+           background:#26262d; border:1px solid var(--line); color:var(--text); padding:12px 16px; border-radius:14px; display:flex; gap:14px;
+           align-items:center; transition:transform .25s; max-width:92vw; font-size:14px; z-index:10; }
+  #toast.show { transform:translateX(-50%) translateY(0); }
+  #toast button { background:none; border:0; color:var(--accent); font:600 14px inherit; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Clip<b>line</b></h1>
+  <span id="count"></span>
+  <button class="icon-btn" id="runBtn" hidden>Run now</button>
+</header>
+<main id="main"></main>
+<div id="toast"><span id="toastMsg"></span><button id="toastBtn"></button></div>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+let pin = store.get("clipline-pin");
+let clips = [];
+const files = new Map();      // id -> File (prefetched so the share sheet opens instantly)
+
+async function api(method, body) {
+  const r = await fetch("/api/decide", {
+    method, headers: { "x-pin": pin || "", "content-type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (r.status === 401) { store.del("clipline-pin"); pin = null; showPin("Wrong PIN"); throw new Error("pin"); }
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.status);
+  return r.json();
+}
+
+let toastTimer;
+function toast(msg, btnText, onBtn) {
+  $("#toastMsg").textContent = msg;
+  const b = $("#toastBtn");
+  b.textContent = btnText || ""; b.hidden = !btnText; b.onclick = () => { $("#toast").classList.remove("show"); onBtn && onBtn(); };
+  $("#toast").classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => $("#toast").classList.remove("show"), btnText ? 5000 : 3000);
+}
+
+function showPin(err) {
+  $("#runBtn").hidden = true; $("#count").textContent = "";
+  $("#main").innerHTML = `<div class="pin"><h2>Enter PIN</h2><div>${err || "The APP_PIN you set on Netlify."}</div>
+    <input id="pinIn" type="password" inputmode="numeric" autocomplete="off"><button id="pinGo">Unlock</button></div>`;
+  const go = () => { pin = $("#pinIn").value.trim(); if (!pin) return; store.set("clipline-pin", pin); load(); };
+  $("#pinGo").onclick = go; $("#pinIn").onkeydown = e => e.key === "Enter" && go();
+}
+
+function caption(c) { return `${c.title}\n${(c.hashtags || []).join(" ")}`.trim(); }
+
+function render() {
+  const live = clips.filter(c => !c.decision);
+  $("#count").textContent = live.length ? `${live.length} to review` : "";
+  $("#runBtn").hidden = false;
+  if (!live.length) {
+    $("#main").innerHTML = `<div class="empty"><h2>All caught up</h2>
+      <div>The worker checks for new clips every 4 hours.<br>Tap <b>Run now</b> to check right away; new clips show up here a few minutes after it finishes.</div></div>`;
+    return;
+  }
+  $("#main").innerHTML = "";
+  for (const c of live) {
+    const el = document.createElement("article");
+    el.className = "card"; el.dataset.id = c.id;
+    el.innerHTML = `
+      <div class="vid"><video src="clips/${c.video}" poster="clips/${c.thumb}" controls playsinline preload="none"></video></div>
+      <div class="meta"><strong></strong> · ${Number(c.views).toLocaleString()} views · ${Math.round(c.duration)}s
+        ${c.score != null ? `<span class="score ${c.score >= 8 ? "hi" : ""}">${c.score}/10</span>` : ""}</div>
+      <textarea rows="3"></textarea>
+      <div class="row"><button class="skip">Skip</button><button class="post">Post ↗</button></div>
+      <a class="src" target="_blank" rel="noopener">Twitch clip: </a>`;
+    $("strong", el).textContent = c.streamer;
+    const ta = $("textarea", el); ta.value = caption(c);
+    ta.oninput = () => { const [t, ...h] = ta.value.split("\n"); c.title = t; c.hashtags = h.join(" ").split(/\s+/).filter(Boolean); };
+    const a = $(".src", el); a.href = c.source_url; a.textContent += c.twitch_title;
+    $(".skip", el).onclick = () => decide(c, "skipped", el);
+    $(".post", el).onclick = () => post(c, el);
+    $("#main").appendChild(el);
+    io.observe(el);
+  }
+}
+
+// Prefetch the mp4 as a File once a card is near the screen (iOS needs share() right inside the tap).
+const io = new IntersectionObserver(entries => {
+  for (const e of entries) if (e.isIntersecting) { io.unobserve(e.target); prefetch(clips.find(c => c.id === e.target.dataset.id)); }
+}, { rootMargin: "400px" });
+
+async function prefetch(c) {
+  if (!c || files.has(c.id)) return;
+  files.set(c.id, null);
+  try {
+    const blob = await (await fetch(`clips/${c.video}`)).blob();
+    files.set(c.id, new File([blob], c.video, { type: "video/mp4" }));
+  } catch { files.delete(c.id); }
+}
+
+async function post(c, el) {
+  const btn = $(".post", el);
+  const text = caption(c);
+  try { navigator.clipboard && navigator.clipboard.writeText(text); } catch {}
+  const file = files.get(c.id);
+  if (!file) {
+    btn.disabled = true; btn.textContent = "Preparing…";
+    await prefetch(c);
+    btn.disabled = false; btn.textContent = files.get(c.id) ? "Tap to share ↗" : "Post ↗";
+    return;
+  }
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], text });
+    } catch (e) {
+      if (e.name === "AbortError") return;      // closed the share sheet, nothing posted
+      toast("Share failed: " + e.message); return;
+    }
+    return decide(c, "posted", el);
+  }
+  // No file sharing (desktop browser): open the video to save it, then confirm.
+  window.open(`clips/${c.video}`, "_blank");
+  btn.textContent = "Mark as posted ✓"; btn.onclick = () => decide(c, "posted", el);
+}
+
+async function decide(c, action, el) {
+  c.decision = action;
+  el.remove(); render();
+  const undo = async () => { c.decision = null; render(); try { await api("POST", { id: c.id, action: "undo" }); } catch {} };
+  toast(action === "posted" ? "Posted. Caption copied. Now submit the link on Whop." : "Skipped", "Undo", undo);
+  try { await api("POST", { id: c.id, action }); }
+  catch (e) { if (e.message !== "pin") { c.decision = null; render(); toast("Couldn't save: " + e.message); } }
+}
+
+$("#runBtn").onclick = async () => {
+  try { await api("POST", { action: "run" }); toast("Worker started. Takes about 5 to 15 min."); }
+  catch (e) { if (e.message !== "pin") toast("Couldn't start: " + e.message); }
+};
+
+async function load() {
+  if (!pin) return showPin();
+  try {
+    const [site, decisions] = await Promise.all([
+      fetch("clips.json", { cache: "no-store" }).then(r => r.json()),
+      api("GET"),
+    ]);
+    clips = site.clips.map(c => ({ ...c, decision: decisions[c.id]?.action || null }));
+    render();
+  } catch (e) {
+    if (e.message !== "pin") $("#main").innerHTML = `<div class="empty"><h2>Couldn't load</h2><div>${String(e.message)}</div></div>`;
+  }
+}
+load();
+</script>
+</body>
+</html>

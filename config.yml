@@ -1,0 +1,16 @@
+# Clipline config — edit on GitHub from your phone; the next worker run picks it up.
+
+streamers:
+  # Swap these for the streamer(s) in the Whop campaign you join.
+  - login: kaicenat
+    layout: blur          # blur = full frame over blurred background (works for any stream)
+                          # stack = facecam on top, gameplay below (set facecam box below)
+    # facecam: [0.0, 0.0, 0.25, 0.30]   # [x, y, width, height] as fractions of the frame
+
+lookback_hours: 48        # only look at clips created in this window
+min_views: 300            # ignore Twitch clips with fewer views than this
+max_new_per_run: 6        # rendered clips added to your queue per run
+max_duration: 60          # seconds
+min_score: 6              # 1-10 Claude "will this work as a Short?" score; needs ANTHROPIC_API_KEY
+hashtags: ["#twitch", "#streamer", "#clips"]
+keep_days: 7              # posted clips stay re-shareable this long, then the file is deleted
