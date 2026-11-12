@@ -47,7 +47,8 @@ def main():
 
     queue = json.loads((ROOT / "data" / "queue.json").read_text())
     decisions = json.loads((ROOT / "data" / "decisions.json").read_text())
-    live = [q for q in queue if q.get("stored") and q.get("status") == "pending"]
+    live = [q for q in queue if q.get("stored") and q.get("status") == "pending" and q["id"] not in decisions]
+    live = sorted(live, key=lambda q: q["added_at"], reverse=True)[:40]  # keep the site well under Pages' 1 GB
 
     assets = {}
     if live and REPO:

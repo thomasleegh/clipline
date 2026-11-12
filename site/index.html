@@ -64,18 +64,52 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch {} },
   del(k) { try { localStorage.removeItem(k); } catch {} },
 };
-let pin = store.get("clipline-pin");
+let token = store.get("clipline-token");
+let repo = "";
 let clips = [];
 const files = new Map();      // id -> File (prefetched so the share sheet opens instantly)
+const DECISIONS = "data/decisions.json";
+
+// Talks straight to the GitHub API with the fine-grained token saved on this phone.
+async function gh(path, opts = {}) {
+  const r = await fetch(`https://api.github.com/repos/${repo}${path}`, {
+    ...opts, cache: "no-store",
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", ...(opts.headers || {}) },
+  });
+  if (r.status === 401) { store.del("clipline-token"); token = null; showPin("That token didn't work. Paste it again."); throw new Error("pin"); }
+  return r;
+}
+const b64decode = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g, "")), c => c.charCodeAt(0)));
+const b64encode = s => btoa(String.fromCharCode(...new TextEncoder().encode(s)));
+
+async function readDecisions() {
+  const r = await gh(`/contents/${DECISIONS}?ref=main`);
+  if (r.status === 404) return { data: {}, sha: undefined };
+  if (!r.ok) throw new Error(`GitHub ${r.status}`);
+  const j = await r.json();
+  return { data: JSON.parse(b64decode(j.content) || "{}"), sha: j.sha };
+}
 
 async function api(method, body) {
-  const r = await fetch("/api/decide", {
-    method, headers: { "x-pin": pin || "", "content-type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (r.status === 401) { store.del("clipline-pin"); pin = null; showPin("Wrong PIN"); throw new Error("pin"); }
-  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.status);
-  return r.json();
+  if (method === "GET") return (await readDecisions()).data;
+  if (body.action === "run") {
+    const r = await gh(`/actions/workflows/worker.yml/dispatches`, { method: "POST", body: JSON.stringify({ ref: "main" }) });
+    if (!r.ok) throw new Error(`GitHub ${r.status}`);
+    return {};
+  }
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const { data, sha } = await readDecisions();
+    if (body.action === "undo") delete data[body.id];
+    else data[body.id] = { action: body.action, at: new Date().toISOString() };
+    const r = await gh(`/contents/${DECISIONS}`, {
+      method: "PUT",
+      body: JSON.stringify({ message: `review: ${body.action} ${body.id}`, sha, branch: "main",
+                             content: b64encode(JSON.stringify(data, null, 1) + "\n") }),
+    });
+    if (r.ok) return {};
+    if (r.status !== 409 && r.status !== 422) throw new Error(`GitHub ${r.status}`);
+  }
+  throw new Error("conflict, try again");
 }
 
 let toastTimer;
@@ -89,9 +123,9 @@ function toast(msg, btnText, onBtn) {
 
 function showPin(err) {
   $("#runBtn").hidden = true; $("#count").textContent = "";
-  $("#main").innerHTML = `<div class="pin"><h2>Enter PIN</h2><div>${err || "The APP_PIN you set on Netlify."}</div>
-    <input id="pinIn" type="password" inputmode="numeric" autocomplete="off"><button id="pinGo">Unlock</button></div>`;
-  const go = () => { pin = $("#pinIn").value.trim(); if (!pin) return; store.set("clipline-pin", pin); load(); };
+  $("#main").innerHTML = `<div class="pin"><h2>Paste your GitHub token</h2><div>${err || "The fine-grained token for the clipline repo. It's saved only on this phone."}</div>
+    <input id="pinIn" type="password" autocomplete="off" style="width:260px;font-size:15px;letter-spacing:0"><button id="pinGo">Save</button></div>`;
+  const go = () => { token = $("#pinIn").value.trim(); if (!token) return; store.set("clipline-token", token); load(); };
   $("#pinGo").onclick = go; $("#pinIn").onkeydown = e => e.key === "Enter" && go();
 }
 
@@ -182,12 +216,11 @@ $("#runBtn").onclick = async () => {
 };
 
 async function load() {
-  if (!pin) return showPin();
+  if (!token) return showPin();
   try {
-    const [site, decisions] = await Promise.all([
-      fetch("clips.json", { cache: "no-store" }).then(r => r.json()),
-      api("GET"),
-    ]);
+    const site = await fetch("clips.json", { cache: "no-store" }).then(r => r.json());
+    repo = site.repo;
+    const decisions = await api("GET");
     clips = site.clips.map(c => ({ ...c, decision: decisions[c.id]?.action || null }));
     render();
   } catch (e) {

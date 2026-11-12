@@ -287,6 +287,9 @@ def cleanup(queue, decisions, keep_days):
 
 # ---------------------------------------------------------------- main
 def main():
+    if not (os.environ.get("TWITCH_CLIENT_ID") and os.environ.get("TWITCH_CLIENT_SECRET")):
+        log("Twitch keys not set yet (TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET) — skipping. DONE")
+        return 0
     cfg = yaml.safe_load((ROOT / "config.yml").read_text())
     queue = load_json(QUEUE, [])
     decisions = load_json(DECISIONS, {})

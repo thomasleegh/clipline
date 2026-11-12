@@ -1,6 +1,0 @@
-[build]
-  command = "python3 scripts/build_site.py"
-  publish = "dist"
-  functions = "netlify/functions"
-
-# The review app's Skip/Post buttons commit with "[skip netlify]" so they don't trigger rebuilds.
