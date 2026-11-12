@@ -1,1 +1,54 @@
-[]
+[
+ {
+  "id": "FlaccidFrigidKoalaPipeHype-dkDLOpffddV2sebF",
+  "streamer": "KaiCenat",
+  "twitch_title": "где жрачка",
+  "views": 517,
+  "created_at": "2026-11-10T02:31:55Z",
+  "duration": 10.9,
+  "source_url": "https://www.twitch.tv/kaicenat/clip/FlaccidFrigidKoalaPipeHype-dkDLOpffddV2sebF",
+  "added_at": "2026-11-12T00:32:06Z",
+  "stored": false,
+  "status": "error",
+  "error": "open() got an unexpected keyword argument 'metadata_errors'"
+ },
+ {
+  "id": "ObeseFrailMomM4xHeh-ugeJOYV79Z2_ycR2",
+  "streamer": "KaiCenat",
+  "twitch_title": "kai calls you fake",
+  "views": 390,
+  "created_at": "2026-11-11T01:01:33Z",
+  "duration": 15.9,
+  "source_url": "https://www.twitch.tv/kaicenat/clip/ObeseFrailMomM4xHeh-ugeJOYV79Z2_ycR2",
+  "added_at": "2026-11-12T00:32:10Z",
+  "stored": false,
+  "status": "error",
+  "error": "open() got an unexpected keyword argument 'metadata_errors'"
+ },
+ {
+  "id": "ProductiveAlertCaribouCurseLit-QrK-TaLPIQfiuEXf",
+  "streamer": "KaiCenat",
+  "twitch_title": "leave kai alone!!!",
+  "views": 367,
+  "created_at": "2026-11-10T01:19:22Z",
+  "duration": 30,
+  "source_url": "https://www.twitch.tv/kaicenat/clip/ProductiveAlertCaribouCurseLit-QrK-TaLPIQfiuEXf",
+  "added_at": "2026-11-12T00:32:11Z",
+  "stored": false,
+  "status": "error",
+  "error": "open() got an unexpected keyword argument 'metadata_errors'"
+ },
+ {
+  "id": "SuspiciousTentativeDotterelCmonBruh-kmqjdjojJmApH5CP",
+  "streamer": "KaiCenat",
+  "twitch_title": "KAI CENAT FAILS EASY MISSION",
+  "views": 306,
+  "created_at": "2026-11-10T06:23:32Z",
+  "duration": 30,
+  "source_url": "https://www.twitch.tv/kaicenat/clip/SuspiciousTentativeDotterelCmonBruh-kmqjdjojJmApH5CP",
+  "added_at": "2026-11-12T00:32:12Z",
+  "stored": false,
+  "status": "error",
+  "error": "open() got an unexpected keyword argument 'metadata_errors'"
+ }
+]
