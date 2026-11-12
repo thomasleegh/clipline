@@ -7,10 +7,19 @@
   "created_at": "2026-11-10T02:31:55Z",
   "duration": 10.9,
   "source_url": "https://www.twitch.tv/kaicenat/clip/FlaccidFrigidKoalaPipeHype-dkDLOpffddV2sebF",
-  "added_at": "2026-11-12T00:32:06Z",
+  "added_at": "2026-11-12T00:34:38Z",
   "stored": false,
-  "status": "error",
-  "error": "open() got an unexpected keyword argument 'metadata_errors'"
+  "title": "Kai checks the fridge... it's empty",
+  "hashtags": [
+   "#KaiCenat",
+   "#Twitch",
+   "#StreamerMoments",
+   "#Shorts",
+   "#Funny"
+  ],
+  "score": 5,
+  "transcript": "Fridge let's see what's in his fridge nothing Let's see what else",
+  "status": "filtered"
  },
  {
   "id": "ObeseFrailMomM4xHeh-ugeJOYV79Z2_ycR2",
@@ -20,23 +29,40 @@
   "created_at": "2026-11-11T01:01:33Z",
   "duration": 15.9,
   "source_url": "https://www.twitch.tv/kaicenat/clip/ObeseFrailMomM4xHeh-ugeJOYV79Z2_ycR2",
-  "added_at": "2026-11-12T00:32:10Z",
+  "added_at": "2026-11-12T00:34:44Z",
   "stored": false,
-  "status": "error",
-  "error": "open() got an unexpected keyword argument 'metadata_errors'"
+  "title": "Kai on people who talk big but don't follow through",
+  "hashtags": [
+   "#KaiCenat",
+   "#Twitch",
+   "#StreamerClips",
+   "#Shorts"
+  ],
+  "score": 3,
+  "transcript": "It's like sign fake about them though At the way he was talking once he felt like he could be able to achieve this like For him for him for him. You know what I'm saying?",
+  "status": "filtered"
  },
  {
   "id": "ProductiveAlertCaribouCurseLit-QrK-TaLPIQfiuEXf",
   "streamer": "KaiCenat",
   "twitch_title": "leave kai alone!!!",
-  "views": 367,
+  "views": 368,
   "created_at": "2026-11-10T01:19:22Z",
   "duration": 30,
   "source_url": "https://www.twitch.tv/kaicenat/clip/ProductiveAlertCaribouCurseLit-QrK-TaLPIQfiuEXf",
-  "added_at": "2026-11-12T00:32:11Z",
-  "stored": false,
-  "status": "error",
-  "error": "open() got an unexpected keyword argument 'metadata_errors'"
+  "added_at": "2026-11-12T00:34:48Z",
+  "stored": true,
+  "title": "leave kai alone!!!",
+  "hashtags": [
+   "#twitch",
+   "#streamer",
+   "#clips"
+  ],
+  "score": null,
+  "transcript": "I hate that. It's like I'm so tired. I'm so fucking tired of grown men trying to dump it under the world. Stop. That's not cool. Like just leave me alone. The fakeest niggas in the fucking world. Full gazing. I need it. I'm fucking talking on me, bro. That shit's annoying, bro. Words have everything I love, game.",
+  "status": "pending",
+  "video": "ProductiveAlertCaribouCurseLit-QrK-TaLPIQfiuEXf.mp4",
+  "thumb": "ProductiveAlertCaribouCurseLit-QrK-TaLPIQfiuEXf.jpg"
  },
  {
   "id": "SuspiciousTentativeDotterelCmonBruh-kmqjdjojJmApH5CP",
@@ -46,9 +72,18 @@
   "created_at": "2026-11-10T06:23:32Z",
   "duration": 30,
   "source_url": "https://www.twitch.tv/kaicenat/clip/SuspiciousTentativeDotterelCmonBruh-kmqjdjojJmApH5CP",
-  "added_at": "2026-11-12T00:32:12Z",
-  "stored": false,
-  "status": "error",
-  "error": "open() got an unexpected keyword argument 'metadata_errors'"
+  "added_at": "2026-11-12T00:35:43Z",
+  "stored": true,
+  "title": "KAI CENAT FAILS EASY MISSION",
+  "hashtags": [
+   "#twitch",
+   "#streamer",
+   "#clips"
+  ],
+  "score": null,
+  "transcript": "I'm gonna be stuck under a cop car. They gotta be more dudes waiting around that way. We did not just get away with that shit Did we you know what I think we did? Oh, man. Oh, yeah, we did it, baby. We did it. Never never go on cheap on a gun man, Jack. I'm never doing cheap, bro. Ever. I'm never doing that shit All right people learn my lesson to split up. They're gonna be looking for a crew. Oh, why are your cuts when the rocks have been",
+  "status": "pending",
+  "video": "SuspiciousTentativeDotterelCmonBruh-kmqjdjojJmApH5CP.mp4",
+  "thumb": "SuspiciousTentativeDotterelCmonBruh-kmqjdjojJmApH5CP.jpg"
  }
 ]
