@@ -112,9 +112,19 @@ def transcribe(path):
     global _whisper
     from faster_whisper import WhisperModel
 
+    import numpy as np
+
+    # Decode with ffmpeg ourselves: faster-whisper's PyAV decoder breaks on newer PyAV releases.
+    raw = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", str(path), "-vn", "-ac", "1", "-ar", "16000", "-f", "f32le", "-"],
+        capture_output=True,
+    ).stdout
+    audio = np.frombuffer(raw, np.float32).copy()
+    if audio.size < 16000:  # no audio track or under 1 s
+        return []
     if _whisper is None:
         _whisper = WhisperModel(os.environ.get("WHISPER_MODEL", "base"), device="cpu", compute_type="int8")
-    segments, _ = _whisper.transcribe(str(path), word_timestamps=True, vad_filter=True)
+    segments, _ = _whisper.transcribe(audio, word_timestamps=True, vad_filter=True)
     words = []
     for seg in segments:
         for w in seg.words or []:
@@ -293,6 +303,9 @@ def main():
     cfg = yaml.safe_load((ROOT / "config.yml").read_text())
     queue = load_json(QUEUE, [])
     decisions = load_json(DECISIONS, {})
+    # Clips that errored get retried on later runs, up to 3 attempts.
+    retry = {q["id"]: q.get("attempts", 1) for q in queue if q.get("status") == "error" and q.get("attempts", 1) < 3}
+    queue = [q for q in queue if q["id"] not in retry]
     seen = {q["id"] for q in queue}
     streamers = {s["login"].lower(): s for s in cfg["streamers"]}
 
@@ -350,6 +363,7 @@ def main():
         except Exception as e:  # noqa: BLE001
             item["status"] = "error"
             item["error"] = str(e)[:300]
+            item["attempts"] = retry.get(c["id"], 0) + 1
             log(f"ERROR on {c['id']}: {e}")
         queue.append(item)
         save_json(QUEUE, queue)  # save as we go so a timeout keeps progress
